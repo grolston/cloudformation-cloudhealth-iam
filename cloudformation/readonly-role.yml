@@ -1,0 +1,186 @@
+AWSTemplateFormatVersion: "2010-09-09"
+Description: "Please do not modify or delete this stack. This CloudFormation template creates one IAM role and policy to enable the CloudHealth billing platform."
+
+Parameters:
+  DBRBucketName :
+       Type: "String"
+       Description: "Enter the S3 bucket name where AWS DBR files are saved. If it is not already enabled, please refer to the CloudHealth Help Center article: https://help.cloudhealthtech.com/administration/enable-aws-account.html#consolidated-step-1."
+       MaxLength: "63"
+
+  CURBucketName :
+      Type: String
+      Description: "Enter the S3 bucket name where AWS CUR files are saved. Please ensure resource IDs are checked and the hourly interval is selected. For set up instructions, please refer to the CloudHealth Help Center artcile: https://help.cloudhealthtech.com/administration/enable-aws-account.html#consolidated-step-3."
+      MaxLength: "63"
+
+  CURBucketPath:
+    Type: "String"
+    Description : "Enter the S3 bucket path where AWS CUR files are stored before the dates (e.g. cost-and-usage/curdata/20191101-20191201; you will fill in just cost-and-usage/curdata)"
+    MaxLength : "90"
+
+  CloudTrailBucketName:
+    Type: "String"
+    Description: "Enter the S3 bucket name where AWS CloudTrail logs are saved. If CloudTrail is not enabled, please enable it Globally."
+    MaxLength: "63"
+
+  CloudTrailBucketPath:
+      Type: "String"
+      Description: "Enter the S3 bucket path where AWS CloudTrail logs are saved. If CloudTrail is not enabled, please enable it Globally."
+      MaxLength: "63"
+
+  CustomerExternalID:
+    Type: "String"
+    Description: "REQUIRED: Enter the ExternalID provided to you by CloudHealth."
+    MinLength: "30"
+    MaxLength: "30"
+
+  AccountFriendlyName:
+    Type: "String"
+    Description: "REQUIRED: Enter a friendly name of the account for CloudHealth (e.g. AcmeCorp - Production - 12345)."
+    MinLength: "1"
+    MaxLength: "90"
+
+Resources:
+  Policy:
+    Type: AWS::IAM::ManagedPolicy
+    Properties:
+      ManagedPolicyName: CloudHealth-CF-Policy-RO
+      Description: CloudHealth Billing and Reporting
+      PolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+        - Effect: Allow
+          Action:
+            - autoscaling:Describe*
+            - aws-portal:ViewBilling
+            - aws-portal:ViewUsage
+            - cloudformation:ListStacks
+            - cloudformation:ListStackResources
+            - cloudformation:DescribeStacks
+            - cloudformation:DescribeStackEvents
+            - cloudformation:DescribeStackResources
+            - cloudformation:GetTemplate
+            - cloudfront:Get*
+            - cloudfront:List*
+            - cloudtrail:DescribeTrails
+            - cloudtrail:GetEventSelectors
+            - cloudtrail:ListTags
+            - cloudwatch:Describe*
+            - cloudwatch:Get*
+            - cloudwatch:List*
+            - config:Get*
+            - config:Describe*
+            - config:Deliver*
+            - config:List*
+            - cur:Describe*
+            - dms:Describe*
+            - dms:List*
+            - dynamodb:DescribeTable
+            - dynamodb:List*
+            - ec2:Describe*
+            - ec2:GetReservedInstancesExchangeQuote
+            - ecs:List*
+            - ecs:Describe*
+            - elasticache:Describe*
+            - elasticache:ListTagsForResource
+            - elasticbeanstalk:Check*
+            - elasticbeanstalk:Describe*
+            - elasticbeanstalk:List*
+            - elasticbeanstalk:RequestEnvironmentInfo
+            - elasticbeanstalk:RetrieveEnvironmentInfo
+            - elasticfilesystem:Describe*
+            - elasticloadbalancing:Describe*
+            - elasticmapreduce:Describe*
+            - elasticmapreduce:List*
+            - es:List*
+            - es:Describe*
+            - es:describe-reserved-elasticsearch-instances
+            - firehose:ListDeliveryStreams
+            - firehose:DescribeDeliveryStream
+            - iam:List*
+            - iam:Get*
+            - iam:GenerateCredentialReport
+            - kinesis:Describe*
+            - kinesis:List*
+            - kms:DescribeKey
+            - kms:GetKeyRotationStatus
+            - kms:ListKeys
+            - lambda:List*
+            - logs:Describe*
+            - organizations:ListAccounts
+            - organizations:ListTagsForResource
+            - redshift:Describe*
+            - route53:Get*
+            - route53:List*
+            - rds:Describe*
+            - rds:ListTagsForResource
+            - s3:GetBucketAcl
+            - s3:GetBucketLocation
+            - s3:GetBucketLogging
+            - s3:GetBucketPolicyStatus
+            - s3:GetBucketPublicAccessBlock
+            - s3:GetAccountPublicAccessBlock
+            - s3:GetBucketTagging
+            - s3:GetBucketVersioning
+            - s3:GetBucketWebsite
+            - s3:List*
+            - sagemaker:Describe*
+            - sagemaker:List*
+            - savingsplans:DescribeSavingsPlans
+            - sdb:GetAttributes
+            - sdb:List*
+            - ses:Get*
+            - ses:List*
+            - sns:Get*
+            - sns:List*
+            - sqs:GetQueueAttributes
+            - sqs:ListQueues
+            - storagegateway:List*
+            - storagegateway:Describe*
+            - workspaces:Describe*
+          Resource: "*"
+        - Effect: Allow
+          Action:
+            - s3:Get*
+            - s3:List*
+          Resource:
+            - !Sub "arn:aws:s3:::${CloudTrailBucketName}"
+            - !Sub "arn:aws:s3:::${CloudTrailBucketName}/*"
+            - !Sub "arn:aws:s3:::${DBRBucketName}"
+            - !Sub "arn:aws:s3:::${DBRBucketName}/*"
+            - !Sub "arn:aws:s3:::${CURBucketName}"
+            - !Sub "arn:aws:s3:::${CURBucketName}/*"
+      Roles:
+        - !Ref CloudHealthRoleARN
+
+  CloudHealthRoleARN:
+    Type: AWS::IAM::Role
+    Properties:
+      RoleName: CloudHealth-CF-Role-RO
+      AssumeRolePolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+        - Effect: Allow
+          Principal:
+            AWS: arn:aws:iam::454464851268:root
+          Action: sts:AssumeRole
+          Condition:
+            StringEquals:
+              sts:ExternalId:
+                Ref: CustomerExternalID
+Outputs:
+  CustomerExternalID:
+    Value: !Ref CustomerExternalID
+  DBRBucketName:
+    Value: !Ref DBRBucketName
+  CURBucketName:
+    Value: !Ref CURBucketName
+  CURBucketPath:
+    Value: !Ref CURBucketPath
+  AccountFriendlyName:
+    Value: !Ref AccountFriendlyName
+  CloudTrailBucketName:
+    Value: !Ref CloudTrailBucketName
+  CloudTrailBucketPath:
+    Value: !Ref CloudTrailBucketPath
+  CloudHealthRoleARN:
+    Value: !GetAtt CloudHealthRoleARN.Arn
