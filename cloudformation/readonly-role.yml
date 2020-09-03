@@ -33,6 +33,18 @@ Parameters:
     MinLength: "30"
     MaxLength: "30"
 
+  SecondaryCustomerExternalID:
+    Type: "String"
+    Description: "REQUIRED: Enter the ExternalID provided to you by CloudHealth."
+    MinLength: "30"
+    MaxLength: "30"
+
+  TertiaryCustomerExternalID:
+    Type: "String"
+    Description: "REQUIRED: Enter the ExternalID provided to you by CloudHealth."
+    MinLength: "30"
+    MaxLength: "30"
+
   AccountFriendlyName:
     Type: "String"
     Description: "REQUIRED: Enter a friendly name of the account for CloudHealth (e.g. AcmeCorp - Production - 12345)."
@@ -149,6 +161,12 @@ Resources:
             - !Sub "arn:aws:s3:::${DBRBucketName}/*"
             - !Sub "arn:aws:s3:::${CURBucketName}"
             - !Sub "arn:aws:s3:::${CURBucketName}/*"
+        - Effect: Allow
+          Action:
+            - s3:*
+          Resource:
+            - !Sub "arn:aws:s3:::cloudhealth-ppbucket-${AWS::AccountId}"
+            - !Sub "arn:aws:s3:::cloudhealth-ppbucket-${AWS::AccountId}/*"
       Roles:
         - !Ref CloudHealthRoleARN
 
@@ -167,6 +185,34 @@ Resources:
             StringEquals:
               sts:ExternalId:
                 Ref: CustomerExternalID
+        - Effect: Allow
+          Principal:
+            AWS: arn:aws:iam::454464851268:root
+          Action: sts:AssumeRole
+          Condition:
+            StringEquals:
+              sts:ExternalId:
+                Ref: SecondaryCustomerExternalID
+        - Effect: Allow
+          Principal:
+            AWS: arn:aws:iam::454464851268:root
+          Action: sts:AssumeRole
+          Condition:
+            StringEquals:
+              sts:ExternalId:
+                Ref: TertiaryCustomerExternalID
+
+  # Post Processing Bucket
+  PPBucket:
+    Type: AWS::S3::Bucket
+    Properties:
+      #checkov:skip=CKV_AWS_21:Ensure the S3 bucket has versioning enabled
+      BucketEncryption:
+        ServerSideEncryptionConfiguration:
+          - ServerSideEncryptionByDefault:
+              SSEAlgorithm: AES256
+      BucketName: !Sub "cloudhealth-ppbucket-${AWS::AccountId}"
+
 Outputs:
   CustomerExternalID:
     Value: !Ref CustomerExternalID
@@ -184,3 +230,5 @@ Outputs:
     Value: !Ref CloudTrailBucketPath
   CloudHealthRoleARN:
     Value: !GetAtt CloudHealthRoleARN.Arn
+  CloudHealthPPBucket:
+    Value: !Ref PPBucket
