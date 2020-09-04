@@ -167,40 +167,40 @@ Resources:
           Resource:
             - !Sub "arn:aws:s3:::cloudhealth-ppbucket-${AWS::AccountId}"
             - !Sub "arn:aws:s3:::cloudhealth-ppbucket-${AWS::AccountId}/*"
-      Roles:
-        - !Ref CloudHealthRoleARN
+      # Roles:
+      #   - !Ref CloudHealthRoleARN
 
-  CloudHealthRoleARN:
-    Type: AWS::IAM::Role
-    Properties:
-      RoleName: CloudHealth-CF-Role-RO
-      AssumeRolePolicyDocument:
-        Version: '2012-10-17'
-        Statement:
-        - Effect: Allow
-          Principal:
-            AWS: arn:aws:iam::454464851268:root
-          Action: sts:AssumeRole
-          Condition:
-            StringEquals:
-              sts:ExternalId:
-                Ref: CustomerExternalID
-        - Effect: Allow
-          Principal:
-            AWS: arn:aws:iam::454464851268:root
-          Action: sts:AssumeRole
-          Condition:
-            StringEquals:
-              sts:ExternalId:
-                Ref: SecondaryCustomerExternalID
-        - Effect: Allow
-          Principal:
-            AWS: arn:aws:iam::454464851268:root
-          Action: sts:AssumeRole
-          Condition:
-            StringEquals:
-              sts:ExternalId:
-                Ref: TertiaryCustomerExternalID
+  # CloudHealthRoleARN:
+  #   Type: AWS::IAM::Role
+  #   Properties:
+  #     RoleName: CloudHealth-CF-Role-RO
+  #     AssumeRolePolicyDocument:
+  #       Version: '2012-10-17'
+  #       Statement:
+  #       - Effect: Allow
+  #         Principal:
+  #           AWS: arn:aws:iam::454464851268:root
+  #         Action: sts:AssumeRole
+  #         Condition:
+  #           StringEquals:
+  #             sts:ExternalId:
+  #               Ref: CustomerExternalID
+  #       - Effect: Allow
+  #         Principal:
+  #           AWS: arn:aws:iam::454464851268:root
+  #         Action: sts:AssumeRole
+  #         Condition:
+  #           StringEquals:
+  #             sts:ExternalId:
+  #               Ref: SecondaryCustomerExternalID
+  #       - Effect: Allow
+  #         Principal:
+  #           AWS: arn:aws:iam::454464851268:root
+  #         Action: sts:AssumeRole
+  #         Condition:
+  #           StringEquals:
+  #             sts:ExternalId:
+  #               Ref: TertiaryCustomerExternalID
 
   # Post Processing Bucket
   PPBucket:
@@ -228,7 +228,7 @@ Outputs:
     Value: !Ref CloudTrailBucketName
   CloudTrailBucketPath:
     Value: !Ref CloudTrailBucketPath
-  CloudHealthRoleARN:
-    Value: !GetAtt CloudHealthRoleARN.Arn
+  # CloudHealthRoleARN:
+  #   Value: !GetAtt CloudHealthRoleARN.Arn
   CloudHealthPPBucket:
     Value: !Ref PPBucket
